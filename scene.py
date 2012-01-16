@@ -109,8 +109,9 @@ class Scene :
 		self.height = h
 		self.set_ratio( float(w)/float(h) )
 
-	def mouse_move( self , df ) :
-		self.camera.rot( *map( lambda x : -x*.2 , df ) )
+	def mouse_move( self , df , buts ) :
+		if 3 in buts and buts[3] :
+			self.camera.rot( *map( lambda x : -x*.2 , df ) )
 
 	def key_pressed( self , mv ) :
 		self.camera.move( *map( lambda x : x*.25 , mv ) )
