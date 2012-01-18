@@ -12,7 +12,7 @@ from glwidget import GLDrawingArea
 
 from scene import Scene
 
-ui_file = "empty.ui"
+ui_file = "spinning_top.ui"
 
 class App(object):
 	"""Application main class"""
@@ -51,22 +51,19 @@ class App(object):
 		win_main.connect('key-release-event', self._on_key_released )
 
 		self.scene = Scene( self.fov , .01 , self.near , self.far )
-		self.drawing_area.add( self.scene , ( 0,0,.5,1) )
-		self.drawing_area.add( self.scene , (.5,0,.5,1) )
+		self.drawing_area.add( self.scene , ( 0,0,1,1) )
 
 		print 'Scene added'
 
 		win_main.show_all()
 
-		width = self.drawing_area.allocation.width / 2.0
+		width = self.drawing_area.allocation.width
 		height = self.drawing_area.allocation.height
 		ratio = float(width)/float(height)
 
 		self.scene.set_ratio( ratio )
 
 		builder.connect_signals(self)
-
-#        self.statbar = builder.get_object('statbar')
 
 		self.drawing_area.connect('motion_notify_event',self._on_mouse_motion)
 		self.drawing_area.connect('button_press_event',self._on_button_pressed)
@@ -87,7 +84,7 @@ class App(object):
 		pass
 
 	def _on_reshape( self , widget , data=None ) :
-		width = self.drawing_area.allocation.width / 2.0
+		width = self.drawing_area.allocation.width
 		height = self.drawing_area.allocation.height
 
 		ratio = float(width)/float(height)

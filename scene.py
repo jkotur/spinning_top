@@ -17,7 +17,7 @@ else:
     timer = time.time
 
 from camera import Camera
-from mesh import Mesh
+from top import Top
 
 class Scene :
 	def __init__( self , fovy , ratio , near , far ) :
@@ -27,7 +27,7 @@ class Scene :
 		self.ratio = ratio
 
 		self.camera = None
-		self.mesh = Mesh('plane.mesh')
+		self.top = Top()
 
 		self.x = 0.0
 
@@ -44,7 +44,7 @@ class Scene :
 
 		glEnable( GL_DEPTH_TEST )
 		glEnable( GL_NORMALIZE )
-#        glEnable( GL_CULL_FACE )
+		glEnable( GL_CULL_FACE )
 		glEnable( GL_COLOR_MATERIAL )
 		glColorMaterial( GL_FRONT , GL_AMBIENT_AND_DIFFUSE )
 
@@ -73,10 +73,10 @@ class Scene :
 		self.last_time = self.time
 
 	def _step( self , dt ) :
-		pass
+		self.top.step( dt )
 
 	def _draw_scene( self ) :
-		self.mesh.draw()
+		self.top.draw()
 
 	def _update_proj( self ) :
 		glMatrixMode(GL_PROJECTION)
