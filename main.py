@@ -173,12 +173,27 @@ class App(object):
 
 	def on_cb_wireframe_toggled(self,widget,data=None):
 		self.scene.toggle_wireframe()
-
 	def on_cb_solid_toggled(self,widget,data=None):
 		self.scene.toggle_solid()
-
 	def on_cb_gravity_toggled(self,widget,data=None):
 		self.scene.toggle_gravity()
+	def on_trace_value_changed(self,widget,data=None):
+		self.scene.set_trace_len( widget.get_value() )
+	def on_set_dens(self,widget,data=None):
+		self.scene.set_dens(widget.get_value())
+	def on_set_x(self,widget,data=None):
+		self.scene.set_x(widget.get_value())
+	def on_set_y(self,widget,data=None):
+		self.scene.set_y(widget.get_value())
+	def on_set_z(self,widget,data=None):
+		self.scene.set_z(widget.get_value())
+	def on_set_a(self,widget,data=None):
+		self.scene.set_a(widget.get_value())
+	def on_set_w(self,widget,data=None):
+		self.scene.set_w(widget.get_value())
+
+	def on_reset(self,widget,data=None):
+		self.scene.reset()
 
 if __name__ == '__main__':
 	app = App()

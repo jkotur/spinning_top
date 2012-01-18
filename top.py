@@ -17,9 +17,21 @@ GRAVITY   = 8
 
 class Top( Mesh ) :
 	def __init__( self ) :
-		self.drawstate = MESH | GRAVITY
+		self.drawstate = MESH | GRAVITY | TRACE
 
-		self.set_block( (1,1,1) , 10 )
+		self.size = [1,1,1]
+		self.dens = 10
+		self.set_block( self.size , self.dens )
+
+		self.g = np.array((0,-10,0,0) , np.float64 )
+		self.G = np.resize( self.g , 3 )
+		self.Q = [ 0 , 0 , 0 , 1 , 0 , 0 , 0 ]
+
+		self.a = 0.0
+		self.w = 0.0
+
+		self.trace = []
+		self.trace_len = 0
 
 		self.reset()
 
@@ -32,6 +44,26 @@ class Top( Mesh ) :
 	def toggle_gravity( self ):
 		self.drawstate ^= GRAVITY
 
+	def set_trace_len( self , tlen ) :
+		self.trace_len = tlen
+
+	def set_dens( self , dens ) :
+		self.dens = dens
+		self.set_block( self.size , self.dens )
+	def set_x( self , x ):
+		self.size[0] = x
+		self.set_block( self.size , self.dens )
+	def set_y( self , y ):
+		self.size[1] = y
+		self.set_block( self.size , self.dens )
+	def set_z( self , z ):
+		self.size[2] = z
+		self.set_block( self.size , self.dens )
+	def set_a( self , a ):
+		self.a = a * m.pi / 180.0
+	def set_w( self , w ):
+		self.w = w
+
 	def set_block( self , s , d ) :
 		aoy = m.atan2( s[2] , s[0] )
 		aoz = m.atan2( s[1] , m.sqrt(s[0]**2+s[2]**2) )
@@ -40,7 +72,7 @@ class Top( Mesh ) :
 		rot = np.dot( tr.rotation_matrix( -aoz , (0,0,1) ) , rot )
 		rot = np.dot( tr.rotation_matrix( m.pi/2.0 , (0,0,1) ) , rot )
 
-		v , n , t = self.gen_v( 1 , 1 )
+		v , n , t = self.gen_v( 1 , 1 , s )
 		for x in range(v.shape[0]) :
 			for y in range(v.shape[1]) :
 				for z in range(v.shape[2]) :
@@ -54,9 +86,6 @@ class Top( Mesh ) :
 		self.m = np.array( [ d*s[0]*s[1]*s[2] / 8.0 ] * len(self.x) , np.float64 )
 		self.M = self.calc_m( self.x , self.m )
 		self.Mi = np.linalg.inv( self.M )
-		self.g = np.array((0,-10,0,0) , np.float64 )
-		self.G = np.resize( self.g , 3 )
-		self.Q = ( 0 , 0 , 0 , 1 , 0 , 0 , 0 )
 
 	def ode( self , t , Q ) :
 		w = Q[:3]
@@ -64,8 +93,12 @@ class Top( Mesh ) :
 		q = q / np.linalg.norm( q )
 
 		qm = tr.inverse_matrix( tr.quaternion_matrix(q) )
-		self.G = np.resize( np.dot( qm , self.g ) , 3 )
-		N = np.cross( self.r , self.G )
+
+		if self.drawstate & GRAVITY :
+			self.G = np.resize( np.dot( qm , self.g ) , 3 )
+			N = np.cross( self.r , self.G )
+		else :
+			N = np.zeros(3)
 
 #        print self.G , N , np.linalg.norm(self.G) , np.linalg.norm(w)
 
@@ -80,12 +113,20 @@ class Top( Mesh ) :
 
 	def reset( self ) :
 		t0 = 0.0
+		self.trace = []
+		self.Q[3:] = tr.quaternion_about_axis(self.a,(0,0,1))
+		self.Q[:3] = (0,self.w,0)
 		self.R = ode(self.ode).set_integrator('dopri5')
 		self.R.set_initial_value(self.Q,t0)
 
 	def step( self , dt ) :
 		if not self.R.successful() : return
 		self.Q = self.R.integrate(self.R.t+dt)
+		if len(self.trace) > self.trace_len :
+			self.trace.pop(0)
+		if len(self.trace) < self.trace_len+1 :
+			qm = tr.quaternion_matrix( self.Q[3:] )
+			self.trace.append( np.dot( qm , self.x[-1] ) )
 
 	def calc_m( self , v , m ) :
 		M = np.zeros((3,3))
@@ -103,9 +144,12 @@ class Top( Mesh ) :
 
 		return M
 
-	def gen_v( self , nx , ny ) :
+	def gen_v( self , nx , ny , size = (1,1,1) ) :
 		nx += 1
 		ny += 1
+
+		s = np.resize(size,4)
+		s[-1] = 1
 
 		v = np.zeros( (6,nx,ny,4)   , np.float64 )
 		n = np.zeros( (6,nx,ny,3)   , np.float64 )
@@ -113,12 +157,12 @@ class Top( Mesh ) :
 
 		for x in range(nx) :
 			for y in range(ny) :
-				v[0,x,y] = np.array(( 0 , x/float(nx-1) , y/float(ny-1) , 1 ))
-				v[1,x,y] = np.array(( 1 , x/float(nx-1) , y/float(ny-1) , 1 ))
-				v[2,x,y] = np.array(( x/float(nx-1) , 1 , y/float(ny-1) , 1 ))
-				v[3,x,y] = np.array(( x/float(nx-1) , 0 , y/float(ny-1) , 1 ))
-				v[4,x,y] = np.array(( x/float(nx-1) , y/float(ny-1) , 0 , 1 ))
-				v[5,x,y] = np.array(( x/float(nx-1) , y/float(ny-1) , 1 , 1 ))
+				v[0,x,y] = np.array(( 0 , x/float(nx-1) , y/float(ny-1) , 1 )) * s
+				v[1,x,y] = np.array(( 1 , x/float(nx-1) , y/float(ny-1) , 1 )) * s
+				v[2,x,y] = np.array(( x/float(nx-1) , 1 , y/float(ny-1) , 1 )) * s
+				v[3,x,y] = np.array(( x/float(nx-1) , 0 , y/float(ny-1) , 1 )) * s
+				v[4,x,y] = np.array(( x/float(nx-1) , y/float(ny-1) , 0 , 1 )) * s
+				v[5,x,y] = np.array(( x/float(nx-1) , y/float(ny-1) , 1 , 1 )) * s
 
 				n[0,x,y] = np.array((-1 , 0 , 0 ))
 				n[1,x,y] = np.array(( 1 , 0 , 0 ))
@@ -149,6 +193,7 @@ class Top( Mesh ) :
 		if self.drawstate & WIREFRAME :
 			glPushMatrix()
 			glMultTransposeMatrixf( qm )
+			glDisable(GL_LIGHTING)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 			glDisable(GL_CULL_FACE)
 			Mesh.draw( self )
@@ -157,10 +202,16 @@ class Top( Mesh ) :
 			glVertex3f( self.x[-1,0] , self.x[-1,1] , self.x[-1,2] )
 			glEnd()
 			glEnable(GL_CULL_FACE)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+			glEnable(GL_LIGHTING)
 			glPopMatrix()
 
 		if self.drawstate & TRACE :
-			pass
+			glDisable(GL_LIGHTING)
+			glBegin(GL_POINTS)
+			for p in self.trace : glVertex3f( *p[:3] )
+			glEnd()
+			glEnable(GL_LIGHTING)
 
 		if self.drawstate & GRAVITY :
 			glPushMatrix()

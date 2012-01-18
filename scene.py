@@ -72,6 +72,9 @@ class Scene :
 
 		self.last_time = self.time
 
+	def reset( self ) :
+		self.top.reset()
+
 	def _step( self , dt ) :
 		self.top.step( dt )
 
@@ -109,6 +112,19 @@ class Scene :
 		self.height = h
 		self.set_ratio( float(w)/float(h) )
 
+	def set_dens(self,v):
+		self.top.set_dens(v)
+	def set_x(self,v):
+		self.top.set_x(v)
+	def set_y(self,v):
+		self.top.set_y(v)
+	def set_z(self,v):
+		self.top.set_z(v)
+	def set_a(self,v):
+		self.top.set_a(v)
+	def set_w(self,v):
+		self.top.set_w(v)
+
 	def mouse_move( self , df , buts ) :
 		if 3 in buts and buts[3] :
 			self.camera.rot( *map( lambda x : -x*.2 , df ) )
@@ -124,3 +140,7 @@ class Scene :
 
 	def toggle_gravity( self ):
 		self.top.toggle_gravity()
+
+	def set_trace_len( self , v ):
+		self.top.set_trace_len(v)
+
