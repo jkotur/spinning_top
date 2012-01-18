@@ -3,6 +3,7 @@ import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
+import gobject
 
 import operator as op
 
@@ -41,7 +42,7 @@ class App(object):
 		self.drawing_area.set_events( gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | gtk.gdk.BUTTON1_MOTION_MASK | gtk.gdk.BUTTON2_MOTION_MASK |gtk.gdk.BUTTON3_MOTION_MASK )
 		self.drawing_area.set_size_request(320,240)
 
-		builder.get_object("vbox1").pack_start(self.drawing_area)
+		builder.get_object("vbox1").pack_end(self.drawing_area)
 
 		win_main = builder.get_object("win_main")
 
@@ -71,7 +72,7 @@ class App(object):
 		self.drawing_area.connect('configure_event',self._on_reshape)
 		self.drawing_area.connect_after('expose_event',self._after_draw)
 
-		gtk.timeout_add( 1 , self._refresh )
+		gobject.timeout_add( 10 , self._refresh )
 
 	def _refresh( self ) :
 		self.drawing_area.queue_draw()
@@ -138,7 +139,7 @@ class App(object):
 
 	def init_glext(self):
 		# Query the OpenGL extension version.
-#        print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
+		print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
 
 		# Configure OpenGL framebuffer.
 		# Try to get a double-buffered framebuffer configuration,
@@ -146,7 +147,6 @@ class App(object):
 		display_mode = (
 				gtk.gdkgl.MODE_RGB    |
 				gtk.gdkgl.MODE_DEPTH  |
-				gtk.gdkgl.MODE_STENCIL|
 				gtk.gdkgl.MODE_DOUBLE )
 		try:
 			glconfig = gtk.gdkgl.Config(mode=display_mode)
@@ -154,14 +154,14 @@ class App(object):
 			display_mode &= ~gtk.gdkgl.MODE_DOUBLE
 			glconfig = gtk.gdkgl.Config(mode=display_mode)
 
-#        print "is RGBA:",                 glconfig.is_rgba()
-#        print "is double-buffered:",      glconfig.is_double_buffered()
-#        print "is stereo:",               glconfig.is_stereo()
-#        print "has alpha:",               glconfig.has_alpha()
-#        print "has depth buffer:",        glconfig.has_depth_buffer()
-#        print "has stencil buffer:",      glconfig.has_stencil_buffer()
-#        print "has accumulation buffer:", glconfig.has_accum_buffer()
-#        print
+		print "is RGBA:",                 glconfig.is_rgba()
+		print "is double-buffered:",      glconfig.is_double_buffered()
+		print "is stereo:",               glconfig.is_stereo()
+		print "has alpha:",               glconfig.has_alpha()
+		print "has depth buffer:",        glconfig.has_depth_buffer()
+		print "has stencil buffer:",      glconfig.has_stencil_buffer()
+		print "has accumulation buffer:", glconfig.has_accum_buffer()
+		print
 
 		return glconfig
 
@@ -170,6 +170,15 @@ class App(object):
 		 
 	def on_but_quit_clicked(self,widget,data=None):
 		gtk.main_quit()
+
+	def on_cb_wireframe_toggled(self,widget,data=None):
+		self.scene.toggle_wireframe()
+
+	def on_cb_solid_toggled(self,widget,data=None):
+		self.scene.toggle_solid()
+
+	def on_cb_gravity_toggled(self,widget,data=None):
+		self.scene.toggle_gravity()
 
 if __name__ == '__main__':
 	app = App()

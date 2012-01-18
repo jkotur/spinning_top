@@ -10,10 +10,10 @@ from scipy.integrate import ode
 
 from mesh import Mesh
 
-MESH     = 1
-DIAGONAL = 2
-TRACE    = 4
-GRAVITY  = 8
+MESH      = 1
+WIREFRAME = 2
+TRACE     = 4
+GRAVITY   = 8
 
 class Top( Mesh ) :
 	def __init__( self ) :
@@ -22,6 +22,15 @@ class Top( Mesh ) :
 		self.set_block( (1,1,1) , 10 )
 
 		self.reset()
+
+	def toggle_wireframe( self ) :
+		self.drawstate ^= WIREFRAME
+
+	def toggle_solid( self ):
+		self.drawstate ^= MESH
+	
+	def toggle_gravity( self ):
+		self.drawstate ^= GRAVITY
 
 	def set_block( self , s , d ) :
 		aoy = m.atan2( s[2] , s[0] )
@@ -137,12 +146,18 @@ class Top( Mesh ) :
 			Mesh.draw( self )
 			glPopMatrix()
 
-		if self.drawstate & DIAGONAL :
-			pass
-#            glPushMatrix()
-#            glBegin(GL_LINES)
-#            glVertex3f(0,0,0)
-#            glVertex3f( np.resize( np.dot(qm
+		if self.drawstate & WIREFRAME :
+			glPushMatrix()
+			glMultTransposeMatrixf( qm )
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+			glDisable(GL_CULL_FACE)
+			Mesh.draw( self )
+			glBegin(GL_LINES)
+			glVertex3f(0,0,0)
+			glVertex3f( self.x[-1,0] , self.x[-1,1] , self.x[-1,2] )
+			glEnd()
+			glEnable(GL_CULL_FACE)
+			glPopMatrix()
 
 		if self.drawstate & TRACE :
 			pass

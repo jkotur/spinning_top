@@ -116,3 +116,11 @@ class Scene :
 	def key_pressed( self , mv ) :
 		self.camera.move( *map( lambda x : x*.25 , mv ) )
 
+	def toggle_wireframe( self ):
+		self.top.toggle_wireframe()
+
+	def toggle_solid( self ):
+		self.top.toggle_solid()
+
+	def toggle_gravity( self ):
+		self.top.toggle_gravity()
